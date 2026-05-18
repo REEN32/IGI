@@ -1,0 +1,11 @@
+{% extends 'parking/base.html' %}
+{% block content %}
+    <h1>Часто задаваемые вопросы</h1>
+    {% for item in questions %}
+        <details style="margin-bottom: 10px; padding: 10px; border: 1px solid #ccc;">
+            <summary style="font-weight: bold; cursor: pointer;">{{ item.question }}</summary>
+            <p>{{ item.answer }}</p>
+            <small>Добавлено: {{ item.added_at }}</small>
+        </details>
+    {% endfor %}
+{% endblock %}

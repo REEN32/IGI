@@ -1,0 +1,57 @@
+{% extends 'parking/base.html' %}
+
+{% block content %}
+<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px;">
+
+    <div>
+        <h1>Добро пожаловать в AutoCar</h1>
+
+        {% if article %}
+            <article style="border: 1px solid #ddd; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                <h2>{{ article.title }}</h2>
+                <p><i>Добавлено: {{ article.created_at|date:"d/m/Y H:i" }}</i></p>
+                <p>{{ article.summary }}</p>
+            </article>
+        {% endif %}
+
+        <div style="background: #fdf6e3; border-left: 5px solid #b58900; padding: 15px; margin-top: 20px;">
+            <h3>Случайная шутка дня:</h3>
+            <p style="font-size: 1.1em; font-style: italic;">"{{ joke }}"</p>
+        </div>
+
+        <h2>Последняя новость</h2>
+        {% if article %}
+            <h3>{{ article.title }} <small>({{ article.created_at|date:"d.m.Y" }})</small></h3>
+            <p><strong>{{ article.summary }}</strong></p>
+            <p>{{ article.content }}</p>
+        {% else %}
+            <p>Новостей пока нет.</p>
+        {% endif %}
+    </div>
+
+    <div style="background: #f8f9fa; padding: 20px; border-radius: 8px;">
+
+        <h4>🌤 Погода (Минск)</h4>
+        {% if weather %}
+            <p>Температура: <strong>{{ weather.temp }}°C</strong></p>
+            <p>Ветер: {{ weather.wind }} км/ч</p>
+        {% else %}
+            <p>Данные о погоде временно недоступны.</p>
+        {% endif %}
+
+        <hr>
+
+        <h4>Время и Дата</h4>
+        <p>Текущая дата: <strong>{{ current_date }}</strong></p>
+        <p>Ваша зона ({{ user_tz }}):<br>{{ user_time }}</p>
+        <p>UTC (Гринвич):<br>{{ utc_time }}</p>
+
+        <hr>
+
+        <h4>Календарь</h4>
+        <pre style="background: #eee; padding: 10px; font-family: monospace; line-height: 1.2;">
+{{ html_cal }}
+        </pre>
+    </div>
+</div>
+{% endblock %}

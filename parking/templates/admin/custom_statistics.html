@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Специальная Статистика</title>
+</head>
+<body>
+    <h1>Аналитика автостоянки "AutoCar"</h1>
+
+    <a href="/admin/">Вернуться в стандартную админку</a>
+    <hr>
+
+    <h3>1. Общий долг по автостоянке</h3>
+    <p>Всего: <strong>{{ total_system_debt }} руб.</strong></p>
+
+    <h3>2. Главный должник</h3>
+    {% if top_debtor %}
+        <p>Клиент: {{ top_debtor.user.get_full_name|default:top_debtor.user.username }}</p>
+        <p>Сумма долга: {{ top_debtor.total_debt }} руб.</p>
+        <p>Последний платеж: {{ last_payment_date|default:"Никогда" }}</p>
+    {% else %}
+        <p>Должников нет.</p>
+    {% endif %}
+
+    <h3>3. Автомобиль с наименьшим долгом</h3>
+    {% if car_min_debt %}
+        <p>Авто: {{ car_min_debt.brand }} {{ car_min_debt.model }} ({{ car_min_debt.plate_number }})</p>
+        <p>Долг: {{ car_min_debt.total_debt }} руб.</p>
+    {% endif %}
+
+    <h3>4. Автомобили с несколькими владельцами</h3>
+    <table border="1">
+        <tr>
+            <th>Автомобиль</th>
+            <th>Владельцы</th>
+        </tr>
+        {% for car in cars_with_multiple_owners %}
+        <tr>
+            <td>{{ car.brand }} {{ car.model }} [{{ car.plate_number }}]</td>
+            <td>
+                <ul>
+                {% for owner in car.owners.all %}
+                    <li>{{ owner.user.get_full_name|default:owner.user.username }}</li>
+                {% endfor %}
+                </ul>
+            </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="2">Нет таких автомобилей.</td></tr>
+        {% endfor %}
+    </table>
+</body>
+</html>

@@ -1,0 +1,17 @@
+{% extends 'parking/base.html' %}
+{% block content %}
+<h1>Открытые вакансии</h1>
+<div style="margin-top: 20px;">
+    {% for vac in vacancies %}
+        <div style="border: 1px solid #ddd; padding: 20px; border-radius: 8px; margin-bottom: 15px; background: #fafafa;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h2>{{ vac.title }}</h2>
+                <span style="background: #e3f2fd; padding: 5px 10px; border-radius: 4px; color: #0d47a1; font-weight: bold;">{{ vac.salary|default:"З/П по результатам собеседования" }}</span>
+            </div>
+            <p style="white-space: pre-line; margin-top: 10px; color: #333;">{{ vac.description }}</p>
+        </div>
+    {% empty %}
+        <p>В настоящее время нет открытых вакансий. Вы можете отправить свое резюме нам на почту.</p>
+    {% endfor %}
+</div>
+{% endblock %}

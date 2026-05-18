@@ -1,0 +1,93 @@
+{% extends 'parking/base.html' %}
+
+{% block content %}
+    <h1>Наши парковочные места и услуги</h1>
+    
+    <form method="get" style="margin-bottom: 20px; background: #eee; padding: 10px;">
+        <label>Максимальная цена:</label>
+        <input type="number" name="max_price" value="{{ max_price }}" placeholder="Введите сумму">
+        <button type="submit">Фильтровать</button>
+        <a href="{% url 'services' %}">Сбросить</a>
+    </form>
+
+    {% if user.is_staff %}
+    <div style="background: #e9ecef; padding: 20px; border-radius: 8px; margin-bottom: 25px; border: 1px solid #ced4da;">
+        <h3 style="margin-top: 0; color: #495057;">🛠️ Панель администратора: Добавить парковочное место</h3>
+        <form action="{% url 'add_parking_spot' %}" method="post" style="display: flex; flex-wrap: wrap; gap: 15px; align-items: flex-end;">
+            {% csrf_token %}
+            <div>
+                <label style="font-weight: bold; color: #495057;">Номер места:</label><br>
+                <input type="text" name="number" required placeholder="Например: №15 или VIP-1"
+                       style="padding: 6px; border: 1px solid #ced4da; border-radius: 4px; width: 160px;">
+            </div>
+            <div>
+                <label style="font-weight: bold; color: #495057;">Цена (руб/мес):</label><br>
+                <input type="number" name="price" step="0.01" required placeholder="120.00"
+                       style="padding: 6px; border: 1px solid #ced4da; border-radius: 4px; width: 120px;">
+            </div>
+            <button type="submit" style="background: #28a745; color: white; border: none; padding: 8px 16px; cursor: pointer; border-radius: 4px; font-weight: bold; font-size: 0.95em;">
+                + Создать место
+            </button>
+        </form>
+    </div>
+    {% endif %}
+    <h2>Парковочные места</h2>
+    <ul style="list-style-type: none; padding-left: 0;">
+        {% for spot in spots %}
+            <li style="margin-bottom: 12px; padding: 10px; background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 6px; display: flex; align-items: center; justify-content: space-between; max-width: 650px; flex-wrap: wrap; gap: 10px;">
+                <div>
+                    <span style="font-size: 1.1em; font-weight: bold;">Место №{{ spot.number }}</span> —
+                    <strong>{{ spot.price }} руб/мес</strong>
+                    {% if spot.is_occupied %}
+                        <span style="color:#dc3545; font-weight: bold; margin-left: 5px;">(Занято)</span>
+                    {% else %}
+                        <span style="color:#28a745; font-weight: bold; margin-left: 5px;">(Свободно)</span>
+                    {% endif %}
+                </div>
+
+                {% if user.is_staff %}
+                <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+
+                    <form action="{% url 'edit_parking_spot_price' spot.id %}" method="post" style="display: inline-flex; gap: 5px; align-items: center; margin: 0;">
+                        {% csrf_token %}
+                        <input type="number" name="price" step="0.01" value="{{ spot.price }}" required
+                               style="width: 80px; padding: 4px; border: 1px solid #ced4da; border-radius: 4px; font-size: 0.9em;">
+                        <button type="submit" style="background: #ffc107; color: #212529; border: none; padding: 5px 10px; cursor: pointer; border-radius: 4px; font-weight: bold; font-size: 0.85em;">
+                            💵 Изменить
+                        </button>
+                    </form>
+
+                    <form action="{% url 'delete_parking_spot' spot.id %}" method="post" style="display: inline; margin: 0;"
+                          onsubmit="return confirm('Вы уверены, что хотите навсегда удалить парковочное место №{{ spot.number }}?');">
+                        {% csrf_token %}
+                        <button type="submit" style="background: #dc3545; color: white; border: none; padding: 5px 10px; cursor: pointer; border-radius: 4px; font-weight: bold; font-size: 0.85em;">
+                            🗑️ Удалить
+                        </button>
+                    </form>
+
+                </div>
+                {% endif %}
+            </li>
+        {% empty %}
+            <li style="color: gray;">Нет доступных мест по заданным критериям.</li>
+        {% endfor %}
+    </ul>
+
+    <h2>Дополнительные услуги</h2>
+    <ul>
+        {% for srv in services %}
+            <li>{{ srv.name }} ({{ srv.category.name }}) — <strong>{{ srv.price }} руб.</strong></li>
+        {% empty %}
+            <li>Услуг не найдено.</li>
+        {% endfor %}
+    </ul>
+
+    <h2>Действующие промокоды</h2>
+    <ul>
+        {% for code in promocodes %}
+            <li>Код: <strong>{{ code.code }}</strong> (Скидка {{ code.discount_percent }}%)</li>
+        {% empty %}
+            <li>Пока нет активных промокодов.</li>
+        {% endfor %}
+    </ul>
+{% endblock %}

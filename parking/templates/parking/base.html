@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>AutoCar - Автостоянка</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f4f9; }
+        header { background-color: #333; color: white; padding: 15px; }
+        nav a { color: white; margin-right: 15px; text-decoration: none; }
+        .container { padding: 20px; max-width: 1000px; margin: auto; background: white; margin-top: 20px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+    </style>
+</head>
+<body>
+    <header>
+        <style>
+            .dropdown {
+                position: relative;
+                display: inline-block;
+            }
+            .dropdown-content {
+                display: none;
+                position: absolute;
+                background-color: #f9f9f9;
+                min-width: 200px;
+                box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+                z-index: 1000;
+                border-radius: 4px;
+            }
+            .dropdown-content a {
+                color: black !important;
+                padding: 12px 16px;
+                text-decoration: none;
+                display: block;
+                border-bottom: 1px solid #eee;
+            }
+            .dropdown-content a:hover {
+                background-color: #f1f1f1;
+            }
+            .dropdown:hover .dropdown-content {
+                display: block;
+            }
+            .dropbtn {
+                cursor: pointer;
+            }
+        </style>
+
+        <nav style="padding: 10px; background: #333; color: white; display: flex; align-items: center;">
+            <a href="{% url 'home' %}" style="color: white; margin-right: 15px;">Главная</a>
+            <a href="{% url 'services' %}" style="color: white; margin-right: 15px;">Услуги</a>
+            <a href="{% url 'reviews' %}" style="color: white; margin-right: 15px;">Отзывы</a>
+            <a href="{% url 'faq' %}" style="color: white; margin-right: 15px;">FAQ</a>
+
+            <div class="dropdown" style="margin-right: 15px;">
+                <span class="dropbtn" style="color: #ffc107; font-weight: bold;">Компания ▾</span>
+                <div class="dropdown-content">
+                    <a href="{% url 'about' %}">О Компании</a>
+                    <a href="{% url 'contacts' %}">Контакты (Сотрудники)</a>
+                    <a href="{% url 'vacancies' %}">Вакансии</a>
+                    <a href="{% url 'privacy_policy' %}">Политика конфиденциальности</a>
+                </div>
+            </div>
+
+            <div style="margin-left: auto; display: flex; align-items: center;">
+                {% if user.is_authenticated %}
+                    {% if user.profile.is_employee or user.is_superuser %}
+                        <a href="{% url 'employee_dashboard' %}" style="background: gold; color: black; padding: 3px 8px; border-radius: 4px;">Панель сотрудника</a>
+                    {% endif %}
+
+                    <a href="{% url 'dashboard' %}" style="color: #4caf50; font-weight: bold; margin-left: 15px;">
+                        {{ user.username }}
+                    </a>
+
+                    <form action="{% url 'logout' %}" method="post" style="margin: 0; padding: 0;">
+                        {% csrf_token %}
+                        <button type="submit" style="background: none; border: none; color: red; margin-left: 15px; cursor: pointer; font-size: 16px; font-family: inherit; padding: 0; text-decoration: underline;">Выйти</button>
+                    </form>
+                {% else %}
+                    <a href="{% url 'login' %}" style="color: white; margin-left: 15px;">Войти</a>
+                    <a href="{% url 'register' %}" style="color: white; margin-left: 15px;">Регистрация</a>
+                {% endif %}
+            </div>
+        </nav>
+    </header>
+
+    <div class="container">
+        {% block content %}
+        {% endblock %}
+    </div>
+</body>
+</html>

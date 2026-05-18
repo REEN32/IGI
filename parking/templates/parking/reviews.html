@@ -1,0 +1,54 @@
+{% extends 'parking/base.html' %}
+
+{% block content %}
+    <h1>Отзывы клиентов</h1>
+
+    {% if user.is_authenticated %}
+        <div style="background: #f9f9f9; padding: 20px; border-radius: 8px; margin-bottom: 30px;">
+            <h3>Оставить отзыв</h3>
+            <form method="post">
+                {% csrf_token %}
+                <div style="margin-bottom: 10px;">
+                    <label>Оценка (1-5):</label><br>
+                    <select name="rating" required style="width: 100px; padding: 5px;">
+                        <option value="5">5 ★</option>
+                        <option value="4">4 ★</option>
+                        <option value="3">3 ★</option>
+                        <option value="2">2 ★</option>
+                        <option value="1">1 ★</option>
+                    </select>
+                </div>
+                <div style="margin-bottom: 10px;">
+                    <label>Ваш отзыв:</label><br>
+                    <textarea name="text" rows="4" style="width: 100%; padding: 10px;" required placeholder="Напишите, что вы думаете о нашей парковке..."></textarea>
+                </div>
+                <button type="submit" style="padding: 10px 20px; background-color: #333; color: white; border: none; cursor: pointer;">
+                    Опубликовать
+                </button>
+            </form>
+        </div>
+    {% else %}
+        <p style="background: #fff3cd; padding: 10px; border: 1px solid #ffeeba;">
+            Только зарегистрированные пользователи могут оставлять отзывы. 
+            <a href="/admin/login/">Войдите</a> или <a href="{% url 'register' %}">зарегистрируйтесь</a>.
+        </p>
+    {% endif %}
+
+    <hr>
+
+    <div class="reviews-list">
+        {% for review in reviews %}
+            <div style="border-bottom: 1px solid #ddd; padding: 15px 0;">
+                <strong style="font-size: 1.1em;">{{ review.author.get_full_name|default:review.author.username }}</strong> 
+                <span style="color: #f39c12; margin-left: 10px;">
+                    {% if review.rating == 5 %} ★★★★★ {% elif review.rating == 4 %} ★★★★ {% elif review.rating == 3 %} ★★★ {% elif review.rating == 2 %} ★★ {% else %} ★ {% endif %}
+                </span>
+                <br>
+                <small style="color: #888;">{{ review.created_at|date:"d.m.Y H:i" }}</small>
+                <p style="margin-top: 10px;">{{ review.text }}</p>
+            </div>
+        {% empty %}
+            <p>Отзывов пока нет. Будьте первым!</p>
+        {% endfor %}
+    </div>
+{% endblock %}

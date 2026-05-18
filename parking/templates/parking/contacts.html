@@ -1,0 +1,21 @@
+{% extends 'parking/base.html' %}
+{% block content %}
+<h1>Наши сотрудники и контакты</h1>
+<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; margin-top: 20px;">
+    {% for emp in employees %}
+        <div style="border: 1px solid #ddd; padding: 15px; border-radius: 8px; text-align: center; background: #fff;">
+            {% if emp.photo_url %}
+                <img src="{{ emp.photo_url }}" alt="{{ emp.name }}" style="width: 120px; height: 120px; border-radius: 50%; object-fit: cover; margin-bottom: 10px;">
+            {% else %}
+                <div style="width: 120px; height: 120px; border-radius: 50%; background: #ccc; margin: 0 auto 10px; display: flex; align-items: center; justify-content: center; color: white;">Нет фото</div>
+            {% endif %}
+            <h3>{{ emp.name }}</h3>
+            <p style="color: #666; font-weight: bold;">{{ emp.position }}</p>
+            <p>📞 {{ emp.phone }}</p>
+            <p>✉️ <a href="mailto:{{ emp.email }}">{{ emp.email }}</a></p>
+        </div>
+    {% empty %}
+        <p>Список сотрудников пуст.</p>
+    {% endfor %}
+</div>
+{% endblock %}

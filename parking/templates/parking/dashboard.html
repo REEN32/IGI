@@ -1,0 +1,172 @@
+{% extends 'parking/base.html' %}
+
+{% block content %}
+    <h1>Личный кабинет</h1>
+
+    <div style="background: #d4edda; color: #155724; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #c3e6cb;">
+        <h3 style="margin: 0;">Ваш авансовый счет: <strong>{{ user.profile.balance }} руб.</strong></h3>
+        <p style="margin: 5px 0 0 0; font-size: 0.9em;">Эти средства будут автоматически списываться при появлении новых счетов.</p>
+    </div>
+
+    <div style="background: #f0f4f8; padding: 20px; border-radius: 8px; margin-bottom: 30px; border: 1px solid #d1d9e6;">
+        <h3>Регистрация авто и выбор места</h3>
+        <form action="{% url 'add_car' %}" method="post" style="display: flex; flex-wrap: wrap; gap: 15px; align-items: flex-end;">
+            {% csrf_token %}
+            <div>
+                <label>Марка:</label><br>
+                <input type="text" name="brand" required style="padding: 5px;">
+            </div>
+            <div>
+                <label>Модель:</label><br>
+                <input type="text" name="model" required style="padding: 5px;">
+            </div>
+            <div>
+                <label>Гос. номер:</label><br>
+                <input type="text" name="plate_number" required style="padding: 5px;">
+            </div>
+            <div>
+                <label><strong>Выберите место:</strong></label><br>
+                <select name="spot_id" required style="padding: 5px; min-width: 150px;">
+                    <option value="">-- Свободные места --</option>
+                    {% for spot in free_spots %}
+                        <option value="{{ spot.id }}">Место №{{ spot.number }} ({{ spot.price }} руб/мес)</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button type="submit" style="background: #28a745; color: white; border: none; padding: 8px 20px; cursor: pointer; border-radius: 4px;">Запарковать</button>
+        </form>
+    </div>
+
+    <h2>Мои автомобили</h2>
+    <ul>
+        {% for car in my_cars %}
+            <li style="margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; max-width: 600px; padding: 8px; border-bottom: 1px inset #eee;">
+                <div>
+                    <strong>{{ car.brand }} {{ car.model }}</strong> ({{ car.plate_number }})
+                    {% if car.parking_spot %}
+                        — <span style="color: blue;">Место №{{ car.parking_spot.number }}</span>
+                    {% endif %}
+                </div>
+
+                <form action="{% url 'delete_car' car.id %}" method="post" onsubmit="return confirm('Вы уверены, что хотите удалить этот автомобиль? Место будет освобождено.');">
+                    {% csrf_token %}
+                    <button type="submit" style="background-color: #dc3545; color: white; border: none; padding: 5px 10px; cursor: pointer; border-radius: 4px; font-size: 0.8em;">
+                        Удалить
+                    </button>
+                </form>
+            </li>
+        {% empty %}
+            <li>У вас пока нет зарегистрированных автомобилей.</li>
+        {% endfor %}
+    </ul>
+
+    <h2>Мои платежи</h2>
+    <table style="width: 100%; border-collapse: collapse;">
+        <thead>
+            <tr style="background: #eee; text-align: left;">
+                <th style="padding: 10px;">Авто / Месяц</th>
+                <th style="padding: 10px;">Начислено</th>
+                <th style="padding: 10px;">Уже оплачено</th>
+                <th style="padding: 10px;">Остаток долга</th>
+                <th style="padding: 10px;">Внести платеж (Сумма / Промокод)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for inv in my_invoices %}
+            <tr style="border-bottom: 1px solid #ddd;">
+                <td style="padding: 10px;">{{ inv.car.plate_number }} ({{ inv.accrual_date|date:"F Y" }})</td>
+                <td style="padding: 10px;">{{ inv.accrued_amount }} руб.</td>
+                <td style="padding: 10px;">{{ inv.paid_amount }} руб.</td>
+                <td style="padding: 10px;">
+                    {% if inv.debt > 0 %}
+                        <strong style="color:red;">{{ inv.debt }} руб.</strong>
+                    {% else %}
+                        <span style="color:green; font-weight: bold;">Оплачено</span>
+                    {% endif %}
+                </td>
+                <td style="padding: 10px;">
+                    {% if inv.debt > 0 %}
+
+                        <form action="{% url 'pay_invoice' inv.id %}" method="post" style="display: flex; flex-direction: column; gap: 4px;">
+                            {% csrf_token %}
+                            <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                                <input type="text" name="promo_code" class="promo-input"
+                                       data-invoice-id="{{ inv.id }}"
+                                       data-original-debt="{{ inv.debt }}"
+                                       placeholder="Промокод"
+                                       style="padding: 5px; border: 1px solid #ccc; border-radius: 4px; width: 110px; font-size: 0.9em;">
+
+                                <input type="number" name="payment_amount" class="amount-input"
+                                       step="0.01" min="0.01" value="{{ inv.debt }}" required
+                                       placeholder="Сумма"
+                                       style="padding: 5px; border: 1px solid #ccc; border-radius: 4px; width: 90px; font-size: 0.9em;">
+
+                                <button type="submit" class="pay-btn" style="background: #007bff; color: white; border: none; padding: 6px 12px; cursor: pointer; border-radius: 4px; font-weight: bold; font-size: 0.9em;">
+                                    Оплатить
+                                </button>
+                            </div>
+                            <div class="promo-status" style="font-size: 0.85em; font-weight: bold; min-height: 18px;"></div>
+                        </form>
+
+                    {% else %}
+                        <span style="font-size: 1.2em;">✅</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="5" style="padding: 15px; text-align: center; color: gray;">У вас пока нет выставленных счетов.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const promoInputs = document.querySelectorAll('.promo-input');
+
+        promoInputs.forEach(input => {
+            input.addEventListener('input', function() {
+                const promoCode = this.value.trim();
+                const invoiceId = this.dataset.invoiceId;
+                const originalDebt = parseFloat(this.dataset.originalDebt);
+
+                const form = this.closest('form');
+                const statusDiv = form.querySelector('.promo-status');
+                const amountInput = form.querySelector('.amount-input');
+                const submitBtn = form.querySelector('.pay-btn');
+
+                if (!promoCode) {
+                    statusDiv.textContent = '';
+                    amountInput.value = originalDebt.toFixed(2);
+                    submitBtn.style.background = '#007bff';
+                    return;
+                }
+
+                fetch(`/check-promocode/?promo_code=${encodeURIComponent(promoCode)}&invoice_id=${invoiceId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            if (data.discount_percent > 0) {
+                                statusDiv.innerHTML = `<span style="color: green;">Применен купон на ${data.discount_percent}%! Полный долг со скидкой: ${data.final_amount.toFixed(2)} руб.</span>`;
+                                amountInput.value = data.final_amount.toFixed(2);
+                                submitBtn.style.background = '#28a745';
+                            } else {
+                                statusDiv.textContent = '';
+                                amountInput.value = originalDebt.toFixed(2);
+                                submitBtn.style.background = '#007bff';
+                            }
+                        } else {
+                            statusDiv.innerHTML = `<span style="color: #dc3545;">Промокод не существует или он не действителен</span>`;
+                            amountInput.value = originalDebt.toFixed(2);
+                            submitBtn.style.background = '#007bff';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Ошибка верификации купона:', error);
+                    });
+            });
+        });
+    });
+    </script>
+{% endblock %}

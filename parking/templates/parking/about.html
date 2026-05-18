@@ -1,0 +1,32 @@
+{% extends 'parking/base.html' %}
+
+{% block content %}
+<div style="max-width: 800px; margin: 0 auto; padding: 20px; background: #fff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+
+    {% if about_info %}
+        <h1 style="color: #333; border-bottom: 2px solid #ffc107; padding-bottom: 10px;">{{ about_info.title }}</h1>
+
+        {% if about_info.founded_year %}
+            <p style="color: #666; font-style: italic;">Мы работаем на рынке автостоянок с <strong>{{ about_info.founded_year }} года</strong>.</p>
+        {% endif %}
+
+        <div style="font-size: 1.1em; line-height: 1.6; color: #444; margin-top: 20px; white-space: pre-line;">
+            {{ about_info.description }}
+        </div>
+
+        {% if about_info.history_text %}
+            <h3 style="margin-top: 30px; color: #2196f3;">Наша история и этапы развития</h3>
+            <div style="font-size: 1em; line-height: 1.6; color: #555; background: #f9f9f9; padding: 15px; border-radius: 6px; border-left: 4px solid #2196f3; white-space: pre-line;">
+                {{ about_info.history_text }}
+            </div>
+        {% endif %}
+
+    {% else %}
+        <h1>О компании</h1>
+        <p style="color: gray; font-style: italic;">
+            Информация о компании находится в процессе наполнения администратором. Пожалуйста, зайдите позже!
+        </p>
+    {% endif %}
+
+</div>
+{% endblock %}
