@@ -36,19 +36,244 @@
 
     <hr>
 
-    <div class="reviews-list">
+    <div style="background: #f0f4f8; padding: 20px; border-radius: 8px; margin-bottom: 25px;">
+        <h3 style="margin-top: 0;">Фильтрация отзывов</h3>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+            <div>
+                <label style="font-weight: bold;">Поиск по тексту:</label>
+                <input type="text" id="searchReviews" placeholder="Введите слово из отзыва..."
+                       style="width: 100%; padding: 8px; margin-top: 5px; border: 1px solid #ccc; border-radius: 4px;">
+            </div>
+
+            <div>
+                <label style="font-weight: bold;">Сортировка:</label>
+                <select id="sortReviews" style="width: 100%; padding: 8px; margin-top: 5px; border: 1px solid #ccc; border-radius: 4px;">
+                    <option value="date_desc">По дате (новые сначала)</option>
+                    <option value="date_asc">По дате (старые сначала)</option>
+                    <option value="rating_desc">По рейтингу (высокие сначала)</option>
+                    <option value="rating_asc">По рейтингу (низкие сначала)</option>
+                    <option value="author_asc">По автору (А-Я)</option>
+                    <option value="author_desc">По автору (Я-А)</option>
+                </select>
+            </div>
+        </div>
+
+        <div style="margin-top: 15px;">
+            <label style="font-weight: bold;">Фильтр по рейтингу:</label>
+            <div style="display: flex; gap: 10px; margin-top: 8px; flex-wrap: wrap;">
+                <label style="cursor: pointer;">
+                    <input type="radio" name="rating_filter" value="all" checked> Все
+                </label>
+                <label style="cursor: pointer;">
+                    <input type="radio" name="rating_filter" value="5"> ★★★★★ (5)
+                </label>
+                <label style="cursor: pointer;">
+                    <input type="radio" name="rating_filter" value="4"> ★★★★☆ (4+)
+                </label>
+                <label style="cursor: pointer;">
+                    <input type="radio" name="rating_filter" value="3"> ★★★☆☆ (3+)
+                </label>
+                <label style="cursor: pointer;">
+                    <input type="radio" name="rating_filter" value="2"> ★★☆☆☆ (2+)
+                </label>
+                <label style="cursor: pointer;">
+                    <input type="radio" name="rating_filter" value="1"> ★☆☆☆☆ (1)
+                </label>
+            </div>
+        </div>
+
+        <div style="margin-top: 15px; padding: 10px; background: white; border-radius: 4px; font-size: 0.9em;">
+            <span id="reviewCount">0</span> отзывов найдено
+        </div>
+    </div>
+
+    <div class="reviews-list" id="reviewsContainer">
         {% for review in reviews %}
-            <div style="border-bottom: 1px solid #ddd; padding: 15px 0;">
-                <strong style="font-size: 1.1em;">{{ review.author.get_full_name|default:review.author.username }}</strong> 
-                <span style="color: #f39c12; margin-left: 10px;">
-                    {% if review.rating == 5 %} ★★★★★ {% elif review.rating == 4 %} ★★★★ {% elif review.rating == 3 %} ★★★ {% elif review.rating == 2 %} ★★ {% else %} ★ {% endif %}
-                </span>
-                <br>
-                <small style="color: #888;">{{ review.created_at|date:"d.m.Y H:i" }}</small>
-                <p style="margin-top: 10px;">{{ review.text }}</p>
+            <div class="review-item"
+                 data-author="{{ review.author.get_full_name|default:review.author.username }}"
+                 data-rating="{{ review.rating }}"
+                 data-date="{{ review.created_at|date:'U' }}">
+                <div style="border-bottom: 1px solid #ddd; padding: 15px 0;">
+                    <strong style="font-size: 1.1em;" class="review-author">{{ review.author.get_full_name|default:review.author.username }}</strong>
+                    <span class="rating-stars" style="color: #f39c12; margin-left: 10px;">
+                        {% if review.rating == 5 %} ★★★★★
+                        {% elif review.rating == 4 %} ★★★★☆
+                        {% elif review.rating == 3 %} ★★★☆☆
+                        {% elif review.rating == 2 %} ★★☆☆☆
+                        {% else %} ★☆☆☆☆ {% endif %}
+                    </span>
+                    <br>
+                    <small style="color: #888;" class="review-date">{{ review.created_at|date:"d.m.Y H:i" }}</small>
+                    <p style="margin-top: 10px;" class="review-text">{{ review.text }}</p>
+                </div>
             </div>
         {% empty %}
-            <p>Отзывов пока нет. Будьте первым!</p>
+            <div class="review-item" data-author="" data-rating="0" data-date="0">
+                <div style="border-bottom: 1px solid #ddd; padding: 15px 0;">
+                    Отзывов пока нет. Будьте первым!
+                </div>
+            </div>
         {% endfor %}
     </div>
+
+    <style>
+        .review-item {
+            transition: all 0.3s ease;
+        }
+        .review-item.hidden {
+            display: none;
+        }
+        .highlight {
+            background-color: #ffeb3b;
+            padding: 0 2px;
+            border-radius: 3px;
+            font-weight: bold;
+        }
+    </style>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.getElementById('searchReviews');
+            const sortSelect = document.getElementById('sortReviews');
+            const ratingFilters = document.querySelectorAll('input[name="rating_filter"]');
+            const reviewCountSpan = document.getElementById('reviewCount');
+
+            let reviews = Array.from(document.querySelectorAll('.review-item'));
+
+            function getReviewText(element) {
+                const textElem = element.querySelector('.review-text');
+                return textElem ? textElem.textContent.toLowerCase() : '';
+            }
+
+            function getAuthor(element) {
+                return element.dataset.author ? element.dataset.author.toLowerCase() : '';
+            }
+
+            function getRating(element) {
+                return parseInt(element.dataset.rating) || 0;
+            }
+
+            function getDate(element) {
+                return parseInt(element.dataset.date) || 0;
+            }
+
+            function filterAndSort() {
+                const searchTerm = searchInput.value.toLowerCase().trim();
+
+                let selectedRating = 'all';
+                for (let radio of ratingFilters) {
+                    if (radio.checked) {
+                        selectedRating = radio.value;
+                        break;
+                    }
+                }
+
+                // Фильтрация
+                let filteredReviews = reviews.filter(review => {
+                    if (review.textContent.includes('Отзывов пока нет')) {
+                        return false;
+                    }
+
+                    const text = getReviewText(review);
+                    const author = getAuthor(review);
+                    const rating = getRating(review);
+
+                    let matchesSearch = true;
+                    if (searchTerm) {
+                        matchesSearch = text.includes(searchTerm) || author.includes(searchTerm);
+                    }
+
+                    let matchesRating = true;
+                    if (selectedRating !== 'all') {
+                        const minRating = parseInt(selectedRating);
+                        matchesRating = rating >= minRating;
+                    }
+
+                    return matchesSearch && matchesRating;
+                });
+
+                const sortBy = sortSelect.value;
+                filteredReviews.sort((a, b) => {
+                    switch(sortBy) {
+                        case 'date_desc':
+                            return getDate(b) - getDate(a);
+                        case 'date_asc':
+                            return getDate(a) - getDate(b);
+                        case 'rating_desc':
+                            return getRating(b) - getRating(a);
+                        case 'rating_asc':
+                            return getRating(a) - getRating(b);
+                        case 'author_asc':
+                            return getAuthor(a).localeCompare(getAuthor(b));
+                        case 'author_desc':
+                            return getAuthor(b).localeCompare(getAuthor(a));
+                        default:
+                            return 0;
+                    }
+                });
+
+                reviews.forEach(review => review.classList.add('hidden'));
+                filteredReviews.forEach(review => review.classList.remove('hidden'));
+
+                const container = document.getElementById('reviewsContainer');
+                filteredReviews.forEach(review => {
+                    container.appendChild(review);
+                });
+
+                reviewCountSpan.textContent = filteredReviews.length;
+
+                if (searchTerm) {
+                    highlightText(searchTerm);
+                } else {
+                    document.querySelectorAll('.highlight').forEach(el => {
+                        const parent = el.parentNode;
+                        const text = document.createTextNode(el.textContent);
+                        parent.replaceChild(text, el);
+                        parent.normalize();
+                    });
+                }
+            }
+
+            function highlightText(searchTerm) {
+                document.querySelectorAll('.highlight').forEach(el => {
+                    const parent = el.parentNode;
+                    const text = document.createTextNode(el.textContent);
+                    parent.replaceChild(text, el);
+                    parent.normalize();
+                });
+
+                if (!searchTerm) return;
+
+                const escapedTerm = searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                const regex = new RegExp(`(${escapedTerm})`, 'gi');
+
+                const visibleReviews = document.querySelectorAll('.review-item:not(.hidden)');
+                visibleReviews.forEach(review => {
+                    const textElement = review.querySelector('.review-text');
+                    if (textElement && textElement.textContent.toLowerCase().includes(searchTerm)) {
+                        const originalText = textElement.textContent;
+                        const newHtml = originalText.replace(regex, '<span class="highlight">$1</span>');
+                        textElement.innerHTML = newHtml;
+                    }
+                });
+            }
+
+            let debounceTimer;
+            function debouncedFilter() {
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(filterAndSort, 300);
+            }
+
+            searchInput.addEventListener('input', debouncedFilter);
+            sortSelect.addEventListener('change', filterAndSort);
+            ratingFilters.forEach(radio => {
+                radio.addEventListener('change', filterAndSort);
+            });
+
+            setTimeout(() => {
+                filterAndSort();
+            }, 100);
+        });
+    </script>
 {% endblock %}

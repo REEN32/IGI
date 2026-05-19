@@ -21,6 +21,11 @@
 
         <h2>Последняя новость</h2>
         {% if article %}
+            {% if article.image_url %}
+                <div style="margin-bottom: 15px;">
+                    <img src="{{ article.image_url }}" alt="{{ article.title }}" style="max-width: 100%; height: auto; border-radius: 4px;">
+                </div>
+            {% endif %}
             <h3>{{ article.title }} <small>({{ article.created_at|date:"d.m.Y" }})</small></h3>
             <p><strong>{{ article.summary }}</strong></p>
             <p>{{ article.content }}</p>
